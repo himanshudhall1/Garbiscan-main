@@ -19,7 +19,7 @@ import pandas as pd
 app = Flask(__name__)
 
 # Load the trained YOLOv8 model
-model = YOLO(r"runs\detect\train6\weights\best.pt")
+model = YOLO(r"best.pt")
 model.fuse()
 
 # Store last alert time for cooldown
