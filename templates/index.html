@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script> 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Lora', serif;
+            background-color: #F5F1E3;
+            color: #4A3F35;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            width: 90%;
+            margin: auto;
+            height: 80vh;
+        }
+
+        .box {
+            background-color: #E3DAC9;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #4A3F35;
+        }
+        .map {
+            background-color: #77815C;
+        }
+        .graph {
+            background-color: #8B5E3B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .Habibi{
+            font-size: 2 px !important;
+            font-weight: normal !important; 
+            text-align: justify !important;
+        }
+
+        .title1{
+            font-size: 60px !important;
+            font-weight: bold !important;
+            color: #4A3F35;
+            margin-top: 20px;
+            margin-right: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Lora', serif;
+        }
+        .title{
+            color: #4A3F35;
+            margin-top: 20px;
+            margin-right: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Lora', serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box map" id="map-container" style="width: 100%; height: 300px; cursor: pointer;" onclick="window.location.href='/map'">
+            <div id="mini-map" style="width: 100%; height: 100%;"></div>
+        </div>
+        <div class="box graph" id="graph1"></div>
+        <div class="box graph" id="graph2"></div>
+        <div class="box graph" id="graph3"></div>
+    </div>
+
+    <div ><span class="title1"> GARBISCAN </span> <br> <br><span class="Habibi" style="text-align: justify;"> India generates 62 million tons of waste annually, yet 31 million tons remain unprocessed, polluting our land, air, and water. Traditional garbage collection methods rely on manual monitoring, leading to inefficiencies, delayed responses, and rising urban health risks.
+            <br> <br>
+        Garbi Scan is an AI-driven waste detection and tracking solution that leverages CCTV footage to identify and manage garbage more efficiently. By eliminating 50-60% of manual intervention costs, optimizing cleaning schedules with predictive analytics, and enabling real-time tracking, Garbi Scan empowers cities to become cleaner, healthier, and more sustainable.
+        <br> <br>
+        Aligned with the United Nations’ SDGs (3, 11, 12, and 13), our technology helps municipalities reduce pollution, enhance urban hygiene, and improve public health. With over 200 Indian cities already equipped with CCTV networks, Garbi Scan seamlessly integrates into existing infrastructure, offering a cost-effective, scalable, and data-driven approach to modern waste management.
+        <br> <br>
+        Join us in transforming waste management—because a smarter, cleaner future starts today.</span></div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/get_graphs')
+                .then(response => response.json())
+                .then(data => {
+                    Plotly.newPlot('graph1', JSON.parse(data.graph1).data, JSON.parse(data.graph1).layout);
+                    Plotly.newPlot('graph2', JSON.parse(data.graph2).data, JSON.parse(data.graph2).layout);
+                    Plotly.newPlot('graph3', JSON.parse(data.graph3).data, JSON.parse(data.graph3).layout);
+                })
+                .catch(error => console.error("Error fetching graphs:", error));
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (L) {
+                var miniMap = L.map("mini-map", {
+                    center: [30.516, 76.66],
+                    zoom: 14,
+                    zoomControl: false,
+                    dragging: false,
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false,
+                    touchZoom: false
+                });
+
+                L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution: "&copy; OpenStreetMap contributors"
+                }).addTo(miniMap);
+
+                document.getElementById("mini-map").addEventListener("click", function () {
+                    window.location.href = "/map";
+                });
+            } else {
+                console.error("Leaflet not loaded!");
+            }
+        });
+        
+        function updateMarkerColors() {
+            fetch('/garbage_status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Garbage Status:", data); // Debugging
+
+                    Object.keys(data).forEach(location => {
+                        let { garbage_percentage, color } = data[location];
+                        let [lat, lon] = location.split(",").map(parseFloat);
+
+                        if (markers[location]) {
+                            markers[location].setIcon(L.AwesomeMarkers.icon({
+                                markerColor: color,
+                                iconColor: "white",
+                                icon: "info-sign",
+                                prefix: "glyphicon",
+                                extraClasses: "fa-rotate-0"
+                            }));
+                        }
+                    });
+                })
+                .catch(error => console.error("Error fetching garbage status:", error));
+        }
+
+        function fetchAndCreateMarkers() {
+    fetch('/location_data')
+        .then(response => response.json())
+        .then(locations => {
+            console.log("Fetched Locations:", locations); // Debugging
+
+            if (!locations.length) {
+                console.warn("No location data received!");
+                return;
+            }
+
+            locations.forEach(loc => {
+                let marker = L.marker([loc.lat, loc.lon], {
+                    icon: L.AwesomeMarkers.icon({
+                        markerColor: "blue", // Default color
+                        iconColor: "white",
+                        icon: "info-sign",
+                        prefix: "glyphicon",
+                        extraClasses: "fa-rotate-0"
+                    })
+                }).addTo(map);
+
+                marker.bindPopup(`
+                    <b>${loc.name}</b><br>
+                    <a href='/cctv?lat=${loc.lat}&lon=${loc.lon}' target="_blank">View CCTV</a>
+                `);
+                marker.bindTooltip(`<div>${loc.name}</div>`, { sticky: true });
+
+                markers[`${loc.lat},${loc.lon}`] = marker;
+            });
+
+            updateMarkerColors();
+            setInterval(updateMarkerColors, 10000);
+        })
+        .catch(error => console.error("Error fetching locations:", error));
+}
+
+    </script>
+        
+</body>
+</html>
+
+{% endblock %}
