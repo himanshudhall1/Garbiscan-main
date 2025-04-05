@@ -26,8 +26,8 @@ model.fuse()
 last_alert_time = {}
 garbage_time_tracker = {}  # {(lat, lon): last_time_above_threshold}
 cleaning_cooldown_tracker = {}  # {(lat, lon): last_cleaning_time}
-pygame.mixer.init()
-ALARM_SOUND_PATH = "static/alarm.mp3"
+#pygame.mixer.init()
+#ALARM_SOUND_PATH = "static/alarm.mp3"
 # Define locations with specific video files
 locations = [
     {"name": "Main Gate", "lat": 30.515, "lon": 76.659, "video": "static/testvideo/test.mp4"},
@@ -354,7 +354,7 @@ def generate_frames(video_path, lat, lon):
         if garbage_percentage > threshold_value and (current_time - last_alert) > cooldown_time:
             alert_message = f"🚨 Alert: Garbage level {garbage_percentage:.2f}% exceeded threshold {threshold_value}%!"
             print(alert_message)
-            play_alarm()
+            # play_alarm()
             send_notification(location_name, lat, lon, garbage_percentage, threshold_value)
             last_alert_time[(lat, lon)] = current_time
 
@@ -516,14 +516,14 @@ def monitor_garbage_threshold():
             # print(f"📊 Garbage analysis data appended for {len(analysis_data)} locations.")
         time.sleep(10) # Run every 1 minute
 
-def play_alarm():
-    """Plays an alarm sound."""
-    try:
-        pygame.mixer.music.load(ALARM_SOUND_PATH)
-        pygame.mixer.music.play()
-        print("🔊 Alarm sound played.")
-    except Exception as e:
-        print("❌ Error playing alarm:", str(e))
+# def play_alarm():
+#     """Plays an alarm sound."""
+#     try:
+#         pygame.mixer.music.load(ALARM_SOUND_PATH)
+#         pygame.mixer.music.play()
+#         print("🔊 Alarm sound played.")
+#     except Exception as e:
+#         print("❌ Error playing alarm:", str(e))
 
 # impo
 # rt pandas as pd
