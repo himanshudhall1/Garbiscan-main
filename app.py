@@ -618,5 +618,7 @@ if __name__ == '__main__':
     detection_thread.start()  # Start background thread
     monitor_thread = threading.Thread(target=monitor_garbage_threshold, daemon=True)
     monitor_thread.start()  # Start background thread
-    # monitor_garbage_threshold()
-    app.run(debug=True, threaded=True)  # Flask app continues running
+#     # monitor_garbage_threshold()
+#     app.run(debug=True, threaded=True)  # Flask app continues running
+# if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
