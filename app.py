@@ -7,7 +7,7 @@ import json
 # import numpy as np
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 from plyer import notification
-import pygame
+# import pygame
 from ultralytics import YOLO  
 import csv
 # from apscheduler.schedulers.background import BackgroundScheduler
